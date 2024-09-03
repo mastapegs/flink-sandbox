@@ -5,10 +5,6 @@ import org.apache.flink.walkthrough.common.entity.Transaction
 import org.apache.flink.walkthrough.common.entity.Alert
 import org.apache.flink.util.Collector
 
-// class FraudDetector extends KeyedProcessFunction[Long, Transaction, Alert] {
-//   def processElement = ???
-// }
-
 class FraudDetector extends KeyedProcessFunction[Long, Transaction, Alert] {
   @throws[Exception]
   override def processElement(
