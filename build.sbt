@@ -7,7 +7,8 @@ ThisBuild / organizationName := "example"
 
 lazy val fraudDetectionExample = (project in file("fraud-detection-example"))
   .settings(
-    name := "fraud-detection-example"
+    name := "fraud-detection-example",
+    assembly / mainClass := Some("fraudExample.FraudExample")
   )
 
 lazy val root = (project in file("."))
