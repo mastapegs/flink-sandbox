@@ -1,0 +1,8 @@
+flink-1.20.0
+.bsp
+.metals
+.vscode
+.bloop
+metals.sbt
+target
+.DS_Store
