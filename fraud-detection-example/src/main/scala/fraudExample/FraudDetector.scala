@@ -8,12 +8,31 @@ import org.apache.flink.api.common.state.ValueState
 import org.apache.flink.api.common.functions.OpenContext
 import org.apache.flink.api.common.state.ValueStateDescriptor
 import org.apache.flink.api.common.typeinfo.Types
-import fraudExample.FraudDetector.flagState
+import java.lang
 
 class FraudDetector extends KeyedProcessFunction[Long, Transaction, Alert] {
+  @transient private var _flagState: ValueState[java.lang.Boolean] = null
+  @transient private def flagState =
+    Option(_flagState.value()).map(_.booleanValue())
+
+  @transient private var _timerState: ValueState[lang.Long] = null
+  @transient private def timerState = Option(_timerState.value()).map(_.toLong)
+
   override def open(openContext: OpenContext): Unit = {
     val flagDescriptor = new ValueStateDescriptor("flag", Types.BOOLEAN)
-    FraudDetector._flagState = getRuntimeContext().getState(flagDescriptor)
+    _flagState = getRuntimeContext().getState(flagDescriptor)
+
+    val timerDescriptor = new ValueStateDescriptor("timer-state", Types.LONG)
+    _timerState = getRuntimeContext().getState(timerDescriptor)
+  }
+
+  override def onTimer(
+      timestamp: Long,
+      ctx: KeyedProcessFunction[Long, Transaction, Alert]#OnTimerContext,
+      out: Collector[Alert]
+  ): Unit = {
+    _flagState.clear()
+    _timerState.clear()
   }
 
   @throws[Exception]
@@ -22,17 +41,22 @@ class FraudDetector extends KeyedProcessFunction[Long, Transaction, Alert] {
       context: KeyedProcessFunction[Long, Transaction, Alert]#Context,
       collector: Collector[Alert]
   ): Unit = {
-    FraudDetector.flagState.foreach { _ =>
+    flagState.foreach { _ =>
       if (transaction.getAmount() > FraudDetector.LARGE_AMOUNT) {
         val alert = new Alert()
         alert.setId(transaction.getAccountId())
         collector.collect(alert)
       }
-      FraudDetector._flagState.clear()
+      _flagState.clear()
     }
 
     if (transaction.getAmount() < FraudDetector.SMALL_AMOUNT)
-      FraudDetector._flagState.update(true)
+      _flagState.update(true)
+
+    val timer =
+      context.timerService().currentProcessingTime() + FraudDetector.ONE_MINUTE
+    context.timerService().registerProcessingTimeTimer(timer)
+    _timerState.update(timer)
   }
 }
 
@@ -41,7 +65,4 @@ object FraudDetector {
   private val SMALL_AMOUNT = 1.00
   private val LARGE_AMOUNT = 500.00
   private val ONE_MINUTE = 60 * 1000
-  @transient private var _flagState: ValueState[java.lang.Boolean] = null
-  @transient private def flagState =
-    Option(_flagState.value()).map(_.booleanValue())
 }
