@@ -30,10 +30,10 @@ lazy val fraudDetectionExample = (project in file("fraud-detection-example"))
     )
   )
 
-lazy val ethereum = (project in file("ethereum"))
+lazy val countExample = (project in file("count-example"))
   .settings(
-    name := "ethereum",
-    assembly / mainClass := Some("ethereum.Main"),
+    name := "count-example",
+    assembly / mainClass := Some("countExample.Main"),
     assemblyMergeStrategy in assembly := {
       case PathList("META-INF", xs @ _*) =>
         (xs.map(_.toLowerCase) match {
@@ -55,7 +55,7 @@ lazy val ethereum = (project in file("ethereum"))
   )
 
 lazy val root = (project in file("."))
-  .aggregate(fraudDetectionExample, ethereum)
+  .aggregate(fraudDetectionExample, countExample)
   .settings(
     name := "flink-jobs"
   )
