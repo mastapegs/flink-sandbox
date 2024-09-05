@@ -9,7 +9,11 @@ object Main extends App {
     .addSource(new CountSourceFunction)
     .name("count-source")
 
-  val alertSink = countSource
+  val squareFunction = countSource
+    .process(new CountProcessFunction)
+    .name("square-function")
+
+  val alertSink = squareFunction
     .addSink(new CountSinkFunction)
     .name("log-sink")
 
