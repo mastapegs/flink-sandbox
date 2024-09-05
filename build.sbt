@@ -19,6 +19,10 @@ lazy val commonSettings = Seq(
         case "module-info.class" :: Nil => MergeStrategy.discard
         case _                          => MergeStrategy.first
       }): MergeStrategy
+    case PathList("reference.conf") =>
+      MergeStrategy.concat // Merge all reference.conf files
+    case PathList("application.conf") =>
+      MergeStrategy.concat // In case there are multiple application.conf
     case _ => MergeStrategy.first
   },
   libraryDependencies ++= Seq(
@@ -49,7 +53,7 @@ lazy val ethereumAnalysis = (project in file("ethereum-analysis"))
     libraryDependencies ++= Seq(
       "org.apache.pekko" %% "pekko-http" % "1.0.1",
       "org.apache.pekko" %% "pekko-stream" % "1.0.3",
-      "org.apache.pekko" %% "pekko-actor-typed" % "1.0.3"
+      "org.apache.pekko" %% "pekko-actor" % "1.0.3"
     )
   )
 
