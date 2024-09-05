@@ -16,7 +16,6 @@ import scala.util.Failure
 
 class SSESourceFunction(url: String) extends SourceFunction[String] {
   @volatile private var isRunning = true
-  private var count = 0L
 
   @transient private implicit var system: ActorSystem = _
   @transient private implicit var ec: ExecutionContextExecutor = _
@@ -41,7 +40,6 @@ class SSESourceFunction(url: String) extends SourceFunction[String] {
       case Failure(exception) =>
         println(s"Failed to connect to SSE source: ${exception.getMessage}")
     }
-    // Old Logic below
 
     while (isRunning) {
       Thread.sleep(1000)
