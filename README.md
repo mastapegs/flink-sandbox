@@ -5,3 +5,4 @@ This is a sandbox repo for learning and playing with Flink, and ultimately compa
 ## Projects
 
 - `fraud-detection-example`: This is the Fraud Detection example from Flink's documentation
+- `count-example`: This is an example project that defines a custom source, sink, and process function. Serves as a super simple reference for making a more complicated job.
