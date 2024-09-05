@@ -14,14 +14,12 @@ import org.apache.pekko.NotUsed
 import scala.util.Success
 import scala.util.Failure
 
-class SSESourceFunction(url: String)(implicit
-    system: ActorSystem,
-    mat: Materializer
-) extends SourceFunction[String] {
+class SSESourceFunction(url: String) extends SourceFunction[String] {
   @volatile private var isRunning = true
   private var count = 0L
 
-  implicit val ec: ExecutionContextExecutor = system.dispatcher
+  @transient private implicit var system: ActorSystem = _
+  @transient private implicit var ec: ExecutionContextExecutor = _
 
   def cancel(): Unit = {
     isRunning = false
@@ -29,6 +27,9 @@ class SSESourceFunction(url: String)(implicit
   }
 
   def run(ctx: SourceFunction.SourceContext[String]): Unit = {
+    system = ActorSystem("SSESourceSystem")
+    ec = system.dispatcher
+
     val responseFuture = for {
       httpResponse <- Http() singleRequest (HttpRequest(uri = url))
       entity <- Unmarshal(httpResponse.entity)

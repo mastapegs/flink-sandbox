@@ -13,9 +13,9 @@ object Main extends App {
     .process(new CountProcessFunction)
     .name("square-function")
 
-  val alertSink = squareFunction
+  val logSink = squareFunction
     .addSink(new CountSinkFunction)
     .name("log-sink")
 
-  env.execute("Ethereum Analysis")
+  env.execute("Count Example")
 }
