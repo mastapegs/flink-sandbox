@@ -7,7 +7,7 @@ ThisBuild / organization := "com.example"
 ThisBuild / organizationName := "example"
 
 lazy val commonSettings = Seq(
-  assemblyMergeStrategy in assembly := {
+  assembly / assemblyMergeStrategy := {
     case PathList("META-INF", xs @ _*) =>
       (xs.map(_.toLowerCase) match {
         case "manifest.mf" :: Nil | "index.list" :: Nil |
@@ -45,7 +45,12 @@ lazy val ethereumAnalysis = (project in file("ethereum-analysis"))
   .settings(
     name := "ethereum-analysis",
     assembly / mainClass := Some("ethereum.Main"),
-    commonSettings
+    commonSettings,
+    libraryDependencies ++= Seq(
+      "org.apache.pekko" %% "pekko-http" % "1.0.1",
+      "org.apache.pekko" %% "pekko-stream" % "1.0.3",
+      "org.apache.pekko" %% "pekko-actor-typed" % "1.0.3"
+    )
   )
 
 lazy val root = (project in file("."))
