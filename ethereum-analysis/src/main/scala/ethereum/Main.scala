@@ -13,12 +13,12 @@ object Main extends App {
     .addSource(new SSESourceFunction(ETHEREUM_HEAD_URL))
     .name("head-data")
 
-  // val txn_data = env
-  //   .addSource(new SSESourceFunction(ETHEREUM_TRANSACTION_URL))
-  //   .name("txn-data")
+  val txn_data = env
+    .addSource(new SSESourceFunction(ETHEREUM_TRANSACTION_URL))
+    .name("txn-data")
 
   head_data.print("Head Data")
-  // txn_data.print("Transaction Data")
+  txn_data.print("Transaction Data")
 
   env.execute("Ethereum Analysis")
 }
