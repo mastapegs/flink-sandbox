@@ -8,7 +8,7 @@ class CountSourceFunction extends SourceFunction[Long] {
 
   def cancel(): Unit = isRunning = false
   def run(ctx: SourceFunction.SourceContext[Long]): Unit = {
-    while (isRunning && count < 100) {
+    while (isRunning && count < 1000) {
       ctx.collect(count)
       count += 1
     }
