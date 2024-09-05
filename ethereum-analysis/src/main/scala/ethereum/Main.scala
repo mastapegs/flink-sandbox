@@ -5,13 +5,20 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment
 object Main extends App {
   val ETHEREUM_HEAD_URL =
     "https://ethereum.demo.thatdot.com/blocks_head"
+  val ETHEREUM_TRANSACTION_URL =
+    "https://ethereum.demo.thatdot.com/mined_transactions"
   val env = StreamExecutionEnvironment.getExecutionEnvironment()
 
-  val sseData = env
+  val head_data = env
     .addSource(new SSESourceFunction(ETHEREUM_HEAD_URL))
-    .name("sse-data")
+    .name("head-data")
 
-  sseData.print()
+  // val txn_data = env
+  //   .addSource(new SSESourceFunction(ETHEREUM_TRANSACTION_URL))
+  //   .name("txn-data")
+
+  head_data.print("Head Data")
+  // txn_data.print("Transaction Data")
 
   env.execute("Ethereum Analysis")
 }
