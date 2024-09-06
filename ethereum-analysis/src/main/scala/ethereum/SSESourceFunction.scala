@@ -14,9 +14,13 @@ import org.apache.pekko.NotUsed
 import scala.util.Success
 import scala.util.Failure
 import EthereumData.EthereumDataOps
+import org.apache.flink.api.java.typeutils.ResultTypeQueryable
+import org.apache.flink.api.common.typeinfo.TypeInformation
+import org.apache.flink.api.java.typeutils.TypeExtractor
 
 class SSESourceFunction[T: EthereumData](url: String)
-    extends SourceFunction[T] {
+    extends SourceFunction[T]
+    with ResultTypeQueryable[T] {
   @volatile private var isRunning = true
 
   @transient private implicit var system: ActorSystem = _
@@ -28,7 +32,7 @@ class SSESourceFunction[T: EthereumData](url: String)
   }
 
   def run(ctx: SourceFunction.SourceContext[T]): Unit = {
-    system = ActorSystem("SSESourceSystem")
+    system = ActorSystem(s"SSESourceSystem-${url}")
     ec = system.dispatcher
 
     val responseFuture = for {
@@ -48,4 +52,6 @@ class SSESourceFunction[T: EthereumData](url: String)
       Thread.sleep(1000)
     }
   }
+
+  def getProducedType(): TypeInformation[T] = EthereumData[T].typeInfo
 }
