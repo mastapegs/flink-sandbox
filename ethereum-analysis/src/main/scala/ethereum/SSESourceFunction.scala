@@ -17,6 +17,7 @@ import EthereumData.EthereumDataOps
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
+import org.apache.pekko.stream.OverflowStrategy
 
 class SSESourceFunction[T: EthereumData](url: String)
     extends SourceFunction[T]
@@ -45,7 +46,15 @@ class SSESourceFunction[T: EthereumData](url: String)
 
     responseFuture.onComplete {
       case Success(source) =>
-        source.runForeach(sse => ctx.collect(sse.data.wrap))
+        source
+          .buffer(
+            1000,
+            overflowStrategy = OverflowStrategy.backpressure
+          )
+          .runForeach(sse => {
+            println("found a record")
+            ctx.collect(sse.data.wrap)
+          })
       case Failure(exception) =>
         println(s"Failed to connect to SSE source: ${exception.getMessage}")
     }
