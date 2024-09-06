@@ -32,7 +32,9 @@ class SSESourceFunction[T: EthereumData](url: String)
   }
 
   def run(ctx: SourceFunction.SourceContext[T]): Unit = {
-    system = ActorSystem(s"SSESourceSystem-${url}")
+    system = ActorSystem(
+      s"SSESourceSystem-${url.replaceAll("[^A-Za-z0-9]", "")}"
+    )
     ec = system.dispatcher
 
     val responseFuture = for {
