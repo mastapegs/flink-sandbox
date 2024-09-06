@@ -7,14 +7,15 @@ object Main extends App {
     "https://ethereum.demo.thatdot.com/blocks_head"
   val ETHEREUM_TRANSACTION_URL =
     "https://ethereum.demo.thatdot.com/mined_transactions"
+
   val env = StreamExecutionEnvironment.getExecutionEnvironment()
 
   val head_data = env
-    .addSource(new SSESourceFunction(ETHEREUM_HEAD_URL))
+    .addSource(new SSESourceFunction[HeadData](ETHEREUM_HEAD_URL))
     .name("head-data")
 
   val txn_data = env
-    .addSource(new SSESourceFunction(ETHEREUM_TRANSACTION_URL))
+    .addSource(new SSESourceFunction[TxnData](ETHEREUM_TRANSACTION_URL))
     .name("txn-data")
 
   head_data.print("Head Data")

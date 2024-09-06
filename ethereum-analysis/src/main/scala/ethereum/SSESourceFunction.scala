@@ -13,8 +13,10 @@ import org.apache.pekko.http.scaladsl.model.sse.ServerSentEvent
 import org.apache.pekko.NotUsed
 import scala.util.Success
 import scala.util.Failure
+import EthereumData.EthereumDataOps
 
-class SSESourceFunction(url: String) extends SourceFunction[String] {
+class SSESourceFunction[T: EthereumData](url: String)
+    extends SourceFunction[T] {
   @volatile private var isRunning = true
 
   @transient private implicit var system: ActorSystem = _
@@ -25,7 +27,7 @@ class SSESourceFunction(url: String) extends SourceFunction[String] {
     system.terminate()
   }
 
-  def run(ctx: SourceFunction.SourceContext[String]): Unit = {
+  def run(ctx: SourceFunction.SourceContext[T]): Unit = {
     system = ActorSystem("SSESourceSystem")
     ec = system.dispatcher
 
@@ -36,7 +38,8 @@ class SSESourceFunction(url: String) extends SourceFunction[String] {
     } yield entity
 
     responseFuture.onComplete {
-      case Success(source) => source.runForeach(sse => ctx.collect(sse.data))
+      case Success(source) =>
+        source.runForeach(sse => ctx.collect(sse.data.wrap))
       case Failure(exception) =>
         println(s"Failed to connect to SSE source: ${exception.getMessage}")
     }
