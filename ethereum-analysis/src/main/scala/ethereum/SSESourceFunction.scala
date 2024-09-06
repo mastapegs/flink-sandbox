@@ -18,6 +18,10 @@ import org.apache.flink.api.java.typeutils.ResultTypeQueryable
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
 import org.apache.pekko.stream.OverflowStrategy
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import org.apache.pekko.http.scaladsl.settings.ServerSentEventSettings
+import org.apache.pekko.http.scaladsl.unmarshalling.sse.EventStreamUnmarshalling
 
 class SSESourceFunction[T: EthereumData](url: String)
     extends SourceFunction[T]
@@ -26,6 +30,7 @@ class SSESourceFunction[T: EthereumData](url: String)
 
   @transient private implicit var system: ActorSystem = _
   @transient private implicit var ec: ExecutionContextExecutor = _
+  @transient private implicit var mat: Materializer = _
 
   def cancel(): Unit = {
     isRunning = false
@@ -37,6 +42,9 @@ class SSESourceFunction[T: EthereumData](url: String)
       s"SSESourceSystem-${url.replaceAll("[^A-Za-z0-9]", "")}"
     )
     ec = system.dispatcher
+    mat = Materializer(system)
+
+    // val customSettings = ServerSentEventSettings(system).withMaxEventSize(65536)
 
     val responseFuture = for {
       httpResponse <- Http() singleRequest (HttpRequest(uri = url))
@@ -44,18 +52,19 @@ class SSESourceFunction[T: EthereumData](url: String)
         .to[Source[ServerSentEvent, NotUsed]]
     } yield entity
 
-    responseFuture.onComplete {
-      case Success(source) =>
-        source
-          .buffer(
-            1000,
-            overflowStrategy = OverflowStrategy.backpressure
-          )
-          .runForeach(sse => ctx.collect(sse.data.wrap))
-      case Failure(exception) =>
-        println(s"Failed to connect to SSE source: ${exception.getMessage}")
+    val streamCompletion = responseFuture.flatMap { case source =>
+      source
+        .buffer(
+          1000,
+          overflowStrategy = OverflowStrategy.backpressure
+        )
+        .runForeach(sse => ctx.collect(sse.data.wrap))
+    }
+    streamCompletion.onComplete { case _ =>
+      if (!isRunning) system.terminate()
     }
 
+    // Await.result(streamCompletion, Duration.Inf)
     while (isRunning) {
       Thread.sleep(1000)
     }
