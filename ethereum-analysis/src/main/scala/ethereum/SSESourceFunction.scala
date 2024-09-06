@@ -51,10 +51,7 @@ class SSESourceFunction[T: EthereumData](url: String)
             1000,
             overflowStrategy = OverflowStrategy.backpressure
           )
-          .runForeach(sse => {
-            println("found a record")
-            ctx.collect(sse.data.wrap)
-          })
+          .runForeach(sse => ctx.collect(sse.data.wrap))
       case Failure(exception) =>
         println(s"Failed to connect to SSE source: ${exception.getMessage}")
     }
