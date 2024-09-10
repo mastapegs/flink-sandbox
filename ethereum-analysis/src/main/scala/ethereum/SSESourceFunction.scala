@@ -13,8 +13,20 @@ import org.apache.pekko.http.scaladsl.model.sse.ServerSentEvent
 import org.apache.pekko.NotUsed
 import scala.util.Success
 import scala.util.Failure
+import SSEData.EthereumDataOps
+import org.apache.flink.api.java.typeutils.ResultTypeQueryable
+import org.apache.flink.api.common.typeinfo.TypeInformation
+import org.apache.flink.api.java.typeutils.TypeExtractor
+import org.apache.pekko.stream.OverflowStrategy
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import org.apache.pekko.http.scaladsl.settings.ServerSentEventSettings
+import org.apache.pekko.http.scaladsl.unmarshalling.sse.EventStreamUnmarshalling
+import scala.concurrent.ExecutionContext
 
-class SSESourceFunction(url: String) extends SourceFunction[String] {
+class SSESourceFunction[T: SSEData](url: String)
+    extends SourceFunction[T]
+    with ResultTypeQueryable[T] {
   @volatile private var isRunning = true
 
   @transient private implicit var system: ActorSystem = _
@@ -25,8 +37,10 @@ class SSESourceFunction(url: String) extends SourceFunction[String] {
     system.terminate()
   }
 
-  def run(ctx: SourceFunction.SourceContext[String]): Unit = {
-    system = ActorSystem("SSESourceSystem")
+  def run(ctx: SourceFunction.SourceContext[T]): Unit = {
+    system = ActorSystem(
+      s"SSESourceSystem-${url.replaceAll("[^A-Za-z0-9]", "")}"
+    )
     ec = system.dispatcher
 
     val responseFuture = for {
@@ -35,14 +49,20 @@ class SSESourceFunction(url: String) extends SourceFunction[String] {
         .to[Source[ServerSentEvent, NotUsed]]
     } yield entity
 
-    responseFuture.onComplete {
-      case Success(source) => source.runForeach(sse => ctx.collect(sse.data))
-      case Failure(exception) =>
-        println(s"Failed to connect to SSE source: ${exception.getMessage}")
+    val streamCompletion = responseFuture.flatMap { case source =>
+      source
+        .buffer(
+          1000,
+          overflowStrategy = OverflowStrategy.backpressure
+        )
+        .runForeach(sse => ctx.collect(sse.data.wrap))
+    }
+    streamCompletion.onComplete { case _ =>
+      if (!isRunning) system.terminate()
     }
 
-    while (isRunning) {
-      Thread.sleep(1000)
-    }
+    Await.result(streamCompletion, Duration.Inf)
   }
+
+  def getProducedType(): TypeInformation[T] = SSEData[T].typeInfo
 }
