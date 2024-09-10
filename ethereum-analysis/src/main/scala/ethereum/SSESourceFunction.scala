@@ -13,7 +13,7 @@ import org.apache.pekko.http.scaladsl.model.sse.ServerSentEvent
 import org.apache.pekko.NotUsed
 import scala.util.Success
 import scala.util.Failure
-import EthereumData.EthereumDataOps
+import SSEData.EthereumDataOps
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.java.typeutils.TypeExtractor
@@ -24,7 +24,7 @@ import org.apache.pekko.http.scaladsl.settings.ServerSentEventSettings
 import org.apache.pekko.http.scaladsl.unmarshalling.sse.EventStreamUnmarshalling
 import scala.concurrent.ExecutionContext
 
-class SSESourceFunction[T: EthereumData](url: String)
+class SSESourceFunction[T: SSEData](url: String)
     extends SourceFunction[T]
     with ResultTypeQueryable[T] {
   @volatile private var isRunning = true
@@ -64,5 +64,5 @@ class SSESourceFunction[T: EthereumData](url: String)
     Await.result(streamCompletion, Duration.Inf)
   }
 
-  def getProducedType(): TypeInformation[T] = EthereumData[T].typeInfo
+  def getProducedType(): TypeInformation[T] = SSEData[T].typeInfo
 }
