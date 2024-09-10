@@ -22,6 +22,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import org.apache.pekko.http.scaladsl.settings.ServerSentEventSettings
 import org.apache.pekko.http.scaladsl.unmarshalling.sse.EventStreamUnmarshalling
+import scala.concurrent.ExecutionContext
 
 class SSESourceFunction[T: EthereumData](url: String)
     extends SourceFunction[T]
@@ -30,7 +31,6 @@ class SSESourceFunction[T: EthereumData](url: String)
 
   @transient private implicit var system: ActorSystem = _
   @transient private implicit var ec: ExecutionContextExecutor = _
-  @transient private implicit var mat: Materializer = _
 
   def cancel(): Unit = {
     isRunning = false
@@ -42,9 +42,6 @@ class SSESourceFunction[T: EthereumData](url: String)
       s"SSESourceSystem-${url.replaceAll("[^A-Za-z0-9]", "")}"
     )
     ec = system.dispatcher
-    mat = Materializer(system)
-
-    // val customSettings = ServerSentEventSettings(system).withMaxEventSize(65536)
 
     val responseFuture = for {
       httpResponse <- Http() singleRequest (HttpRequest(uri = url))
@@ -64,10 +61,7 @@ class SSESourceFunction[T: EthereumData](url: String)
       if (!isRunning) system.terminate()
     }
 
-    // Await.result(streamCompletion, Duration.Inf)
-    while (isRunning) {
-      Thread.sleep(1000)
-    }
+    Await.result(streamCompletion, Duration.Inf)
   }
 
   def getProducedType(): TypeInformation[T] = EthereumData[T].typeInfo
