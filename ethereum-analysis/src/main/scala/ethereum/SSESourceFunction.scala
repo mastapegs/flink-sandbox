@@ -55,11 +55,9 @@ class SSESourceFunction[T: SSEData](url: String)
           1000,
           overflowStrategy = OverflowStrategy.backpressure
         )
-        .runForeach(sse => {
-          sse.data.parseJson match {
-            case Left(error)    => println(error)
-            case Right(sseData) => ctx.collect(sseData)
-          }
+        .runForeach(_.data.parseJson match {
+          case Left(error)    => println(error)
+          case Right(sseData) => ctx.collect(sseData)
         })
     }
     streamCompletion.onComplete { case _ =>
