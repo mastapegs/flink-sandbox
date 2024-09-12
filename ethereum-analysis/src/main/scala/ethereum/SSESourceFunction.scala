@@ -57,11 +57,8 @@ class SSESourceFunction[T: SSEData](url: String)
         )
         .runForeach(sse => {
           sse.data.parseJson match {
-            case Left(error) => println(error)
-            case Right(sseData) => {
-              println(sse.data)
-              ctx.collect(sseData)
-            }
+            case Left(error)    => println(error)
+            case Right(sseData) => ctx.collect(sseData)
           }
         })
     }
