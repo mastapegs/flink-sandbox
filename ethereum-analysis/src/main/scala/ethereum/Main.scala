@@ -11,15 +11,15 @@ object Main extends App {
   val env = StreamExecutionEnvironment.getExecutionEnvironment()
 
   val head_data = env
-    .addSource(new SSESourceFunction[HeadData](ETHEREUM_HEAD_URL))
+    .addSource(new SSESourceFunction[BlockHead](ETHEREUM_HEAD_URL))
     .name("head-data")
 
-  val txn_data = env
-    .addSource(new SSESourceFunction[TxnData](ETHEREUM_TRANSACTION_URL))
-    .name("txn-data")
+  // val txn_data = env
+  //   .addSource(new SSESourceFunction[TxnData](ETHEREUM_TRANSACTION_URL))
+  //   .name("txn-data")
 
   head_data.print("Head Data")
-  txn_data.print("Transaction Data")
+  // txn_data.print("Transaction Data")
 
   env.execute("Ethereum Analysis")
 }
