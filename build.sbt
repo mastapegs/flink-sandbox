@@ -53,7 +53,10 @@ lazy val ethereumAnalysis = (project in file("ethereum-analysis"))
     libraryDependencies ++= Seq(
       pekkoHttp,
       pekkoStream,
-      pekkoActor
+      pekkoActor,
+      circeCore,
+      circeGeneric,
+      circeParser
     )
   )
 
