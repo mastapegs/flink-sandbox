@@ -11,7 +11,7 @@ object Main extends App {
   val env = StreamExecutionEnvironment.getExecutionEnvironment()
 
   val head_data = env
-    .addSource(new SSESourceFunction[HeadData](ETHEREUM_HEAD_URL))
+    .addSource(new SSESourceFunction[BlockHead](ETHEREUM_HEAD_URL))
     .name("head-data")
 
   val txn_data = env

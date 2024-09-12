@@ -2,31 +2,39 @@ package ethereum
 
 import org.apache.flink.api.common.typeinfo.TypeInformation
 import org.apache.flink.api.scala.createTypeInformation
-
-case class HeadData(data: String)
-case class TxnData(data: String)
+import javassist.bytecode.analysis.ControlFlow.Block
+import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
 
 trait SSEData[T] extends Serializable {
-  def wrap(str: String): T
+  def parseJson(str: String): Either[Throwable, T]
   def typeInfo: TypeInformation[T]
 }
+
+case class BlockHead(
+    hash: String,
+    miner: String,
+    number: Long,
+    parentHash: String
+)
+
+case class TxnData(hash: String, to: String, from: String, value: String)
 
 object SSEData {
   def apply[T: SSEData] = implicitly[SSEData[T]]
 
-  implicit val headEthereumData: SSEData[HeadData] =
-    new SSEData[HeadData] {
-      def wrap(str: String): HeadData = HeadData(str)
-      def typeInfo: TypeInformation[HeadData] = createTypeInformation[HeadData]
-    }
+  implicit val blockHeadData: SSEData[BlockHead] = new SSEData[BlockHead] {
+    def parseJson(str: String): Either[Throwable, BlockHead] =
+      decode[BlockHead](str)
+    def typeInfo: TypeInformation[BlockHead] = createTypeInformation[BlockHead]
+  }
 
-  implicit val txnEthereumData: SSEData[TxnData] =
-    new SSEData[TxnData] {
-      def wrap(str: String): TxnData = TxnData(str)
-      def typeInfo: TypeInformation[TxnData] = createTypeInformation[TxnData]
-    }
+  implicit val txnData: SSEData[TxnData] = new SSEData[TxnData] {
+    def parseJson(str: String): Either[Throwable, TxnData] =
+      decode[TxnData](str)
+    def typeInfo: TypeInformation[TxnData] = createTypeInformation[TxnData]
+  }
 
   implicit class EthereumDataOps[D: SSEData](str: String) {
-    def wrap: D = SSEData[D].wrap(str)
+    def parseJson: Either[Throwable, D] = SSEData[D].parseJson(str)
   }
 }

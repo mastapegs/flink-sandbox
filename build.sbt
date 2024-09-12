@@ -26,8 +26,8 @@ lazy val commonSettings = Seq(
     case _ => MergeStrategy.first
   },
   libraryDependencies ++= Seq(
-    "org.apache.flink" %% "flink-streaming-scala" % "1.20.0",
-    "org.apache.flink" %% "flink-walkthrough-common" % "1.14.6"
+    flinkStreamingScala,
+    flinkWalkthrough
   )
 )
 
@@ -51,9 +51,12 @@ lazy val ethereumAnalysis = (project in file("ethereum-analysis"))
     assembly / mainClass := Some("ethereum.Main"),
     commonSettings,
     libraryDependencies ++= Seq(
-      "org.apache.pekko" %% "pekko-http" % "1.0.1",
-      "org.apache.pekko" %% "pekko-stream" % "1.0.3",
-      "org.apache.pekko" %% "pekko-actor" % "1.0.3"
+      pekkoHttp,
+      pekkoStream,
+      pekkoActor,
+      circeCore,
+      circeGeneric,
+      circeParser
     )
   )
 
