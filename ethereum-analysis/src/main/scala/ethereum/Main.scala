@@ -49,27 +49,22 @@ object Main extends App {
   head_data.print("Head Data")
   txn_data.print("Transaction Data")
 
-  // val query = tableEnv.sqlQuery(
-  //   """
-  //   |SELECT t.hash, b.miner, t.to, t.from, t.value
-  //   |FROM TxnDataTable AS t
-  //   |JOIN BlockHeadTable AS b
-  //   |ON t.hash = b.hash
-  // """.stripMargin
-  // )
-
+  // WORKS
   // val query = tableEnv.sqlQuery(
   //   "SELECT COUNT(*) FROM TxnDataTable GROUP BY TUMBLE(proctime, INTERVAL '16' SECOND)"
   // )
 
+  // WORKS
   // val query = tableEnv.sqlQuery(
   //   "SELECT COUNT(*) FROM TxnDataTable"
   // )
 
   val query = tableEnv.sqlQuery(
     """
-    |SELECT blockHash
-    |FROM TxnDataTable
+    |SELECT t.blockHash, b.`hash`
+    |FROM TxnDataTable AS t
+    |JOIN BlockHeadTable AS b
+    |ON t.blockHash = b.`hash`
   """.stripMargin
   )
 
