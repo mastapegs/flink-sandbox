@@ -46,9 +46,6 @@ object Main extends App {
   tableEnv.createTemporaryView("BlockHeadTable", blockHeadTable)
   tableEnv.createTemporaryView("TxnDataTable", txnDataTable)
 
-  head_data.print("Head Data")
-  txn_data.print("Transaction Data")
-
   // WORKS
   // val query = tableEnv.sqlQuery(
   //   "SELECT COUNT(*) FROM TxnDataTable GROUP BY TUMBLE(proctime, INTERVAL '16' SECOND)"
@@ -63,10 +60,11 @@ object Main extends App {
   // Flink will hold on to the record in state for an indefinite period to ensure that no future matches are missed.
   val query = tableEnv.sqlQuery(
     """
-    |SELECT t.`hash`, b.`hash`
+    |SELECT t.`hash`, SUM(CAST(t.`value` AS DECIMAL(38, 0))) AS total_value, b.number
     |FROM TxnDataTable AS t
     |JOIN BlockHeadTable AS b
     |ON t.blockHash = b.`hash`
+    |GROUP BY t.`hash`, b.number
   """.stripMargin
   )
 
