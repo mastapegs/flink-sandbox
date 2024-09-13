@@ -59,6 +59,8 @@ object Main extends App {
   //   "SELECT COUNT(*) FROM TxnDataTable"
   // )
 
+  // If **unbounded** streams are involved, and there are no time constraints (i.e., windows or watermarks),
+  // Flink will hold on to the record in state for an indefinite period to ensure that no future matches are missed.
   val query = tableEnv.sqlQuery(
     """
     |SELECT t.blockHash, b.`hash`
