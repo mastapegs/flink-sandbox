@@ -63,7 +63,7 @@ object Main extends App {
   // Flink will hold on to the record in state for an indefinite period to ensure that no future matches are missed.
   val query = tableEnv.sqlQuery(
     """
-    |SELECT t.blockHash, b.`hash`
+    |SELECT t.`hash`, b.`hash`
     |FROM TxnDataTable AS t
     |JOIN BlockHeadTable AS b
     |ON t.blockHash = b.`hash`
