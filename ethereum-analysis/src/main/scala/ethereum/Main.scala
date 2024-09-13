@@ -52,10 +52,10 @@ object Main extends App {
   // )
 
   val query = tableEnv.sqlQuery(
-    "SELECT COUNT(*) FROM TxnDataTable GROUP BY TUMBLE(proctime, INTERVAL '34' SECOND)"
+    "SELECT COUNT(*) FROM TxnDataTable GROUP BY TUMBLE(proctime, INTERVAL '16' SECOND)"
   )
-  val resultStream = tableEnv.toDataStream(query)
 
+  val resultStream = tableEnv.toDataStream(query)
   resultStream.print("Count")
 
   env.execute("Ethereum Analysis")
