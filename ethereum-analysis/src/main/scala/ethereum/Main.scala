@@ -26,8 +26,37 @@ object Main extends App {
     )
     .name("txn-data")
 
+  val blockHeadTable = tableEnv.fromDataStream(head_data)
+  val txnDataTable = tableEnv.fromDataStream(
+    txn_data,
+    $"hash",
+    $"to",
+    $"from",
+    $"value",
+    $"proctime".proctime
+  )
+
+  tableEnv.createTemporaryView("BlockHeadTable", blockHeadTable)
+  tableEnv.createTemporaryView("TxnDataTable", txnDataTable)
+
   head_data.print("Head Data")
   txn_data.print("Transaction Data")
+
+  // val query = tableEnv.sqlQuery(
+  //   """
+  //   |SELECT t.hash, b.miner, t.to, t.from, t.value
+  //   |FROM TxnDataTable AS t
+  //   |JOIN BlockHeadTable AS b
+  //   |ON t.hash = b.hash
+  // """.stripMargin
+  // )
+
+  val query = tableEnv.sqlQuery(
+    "SELECT COUNT(*) FROM TxnDataTable GROUP BY TUMBLE(proctime, INTERVAL '34' SECOND)"
+  )
+  val resultStream = tableEnv.toDataStream(query)
+
+  resultStream.print("Count")
 
   env.execute("Ethereum Analysis")
 }
