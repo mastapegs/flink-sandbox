@@ -27,6 +27,7 @@ lazy val commonSettings = Seq(
   },
   libraryDependencies ++= Seq(
     flinkStreamingScala,
+    flinkTableApiScalaBridge,
     flinkWalkthrough
   )
 )

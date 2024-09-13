@@ -17,7 +17,7 @@ case class BlockHead(
     parentHash: String
 )
 
-case class TxnData(hash: String, to: String, from: String, value: String)
+case class TxnData(hash: String, blockHash: String, to: String, from: String, value: String)
 
 object SSEData {
   def apply[T: SSEData] = implicitly[SSEData[T]]
