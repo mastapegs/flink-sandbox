@@ -48,28 +48,40 @@ object Main extends App {
 
   // WORKS
   // val query = tableEnv.sqlQuery(
-  //   "SELECT COUNT(*) FROM TxnDataTable GROUP BY TUMBLE(proctime, INTERVAL '16' SECOND)"
+  //   "SELECT COUNT(*) FROM TxnDataTable"
   // )
 
   // WORKS
   // val query = tableEnv.sqlQuery(
-  //   "SELECT COUNT(*) FROM TxnDataTable"
+  //   "SELECT COUNT(*) FROM TxnDataTable GROUP BY TUMBLE(proctime, INTERVAL '16' SECOND)"
   // )
 
   // If **unbounded** streams are involved, and there are no time constraints (i.e., windows or watermarks),
   // Flink will hold on to the record in state for an indefinite period to ensure that no future matches are missed.
   val query = tableEnv.sqlQuery(
     """
-    |SELECT t.`hash`, SUM(CAST(t.`value` AS DECIMAL(38, 0))) AS total_value, b.number
+    |SELECT t.`hash`, t.`value`, b.number
     |FROM TxnDataTable AS t
     |JOIN BlockHeadTable AS b
     |ON t.blockHash = b.`hash`
-    |GROUP BY t.`hash`, b.number
+  """.stripMargin
+  )
+
+  val sumQuery = tableEnv.sqlQuery(
+    """
+    |SELECT b.number, SUM(CAST(t.`value` AS DECIMAL(38, 0))) AS total_value
+    |FROM TxnDataTable AS t
+    |JOIN BlockHeadTable AS b
+    |ON t.blockHash = b.`hash`
+    |GROUP BY b.number
   """.stripMargin
   )
 
   val resultStream = tableEnv.toChangelogStream(query)
-  resultStream.print("Count")
+  val sumStream = tableEnv.toChangelogStream(sumQuery)
+
+  resultStream.print("Transactions")
+  sumStream.print("SUM Txn Value")
 
   env.execute("Ethereum Analysis")
 }
